@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI TTS 음성 변환기</title>
+  <title>AI TTS 음성 변환기 (로그인 포함)</title>
   <style>
     * { box-sizing: border-box; }
 
@@ -37,6 +37,54 @@
       font-size: 14px;
     }
 
+    /* 로그인 / 회원가입 폼 스타일 */
+    .auth-box {
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 20px;
+      border: 1px solid #edf1f5;
+      background: #f7f9fb;
+      border-radius: 16px;
+    }
+    
+    .auth-input {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .auth-toggle-text {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .auth-toggle-text span {
+      color: #42a5f5;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .user-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f3f4;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .logout-btn {
+      background: #e57373;
+      color: white;
+      height: 32px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    /* 기존 TTS 스타일 유지 */
     .info {
       padding: 14px;
       margin-bottom: 20px;
@@ -120,22 +168,12 @@
       transform: none;
     }
 
-    .make-btn {
-      background: #42a5f5;
-      color: white;
-    }
+    .make-btn { background: #42a5f5; color: white; }
+    .clear-btn { background: #b0bec5; color: white; }
+    .download-link { background: #7e57c2; color: white; }
+    .auth-btn { background: #42a5f5; color: white; width: 100%; }
 
-    .clear-btn {
-      background: #b0bec5;
-      color: white;
-    }
-
-    .download-link {
-      background: #7e57c2;
-      color: white;
-    }
-
-    .hidden { display: none; }
+    .hidden { display: none !important; }
 
     .status {
       min-height: 24px;
@@ -176,57 +214,114 @@
     <h1>AI TTS 음성 변환기</h1>
     <div class="subtitle">텍스트를 AI 음성 mp3 파일로 변환합니다</div>
 
-    <div class="info">
-      현재 구조: GitHub Pages 화면 → Google Apps Script 서버 → OpenAI TTS API → mp3 음성 반환<br />
-      API Key는 index.html에 들어가지 않고 Apps Script의 스크립트 속성에 저장됩니다.
-    </div>
-
-    <div class="option-box">
-      <select id="modelSelect">
-        <option value="tts-1">tts-1 빠른 생성</option>
-        <option value="tts-1-hd">tts-1-hd 고품질</option>
-      </select>
-
-      <select id="voiceSelect">
-        <option value="alloy">alloy</option>
-        <option value="echo">echo</option>
-        <option value="fable">fable</option>
-        <option value="onyx">onyx</option>
-        <option value="nova">nova</option>
-        <option value="shimmer">shimmer</option>
-      </select>
-
-      <input id="speedInput" type="number" min="0.25" max="4.0" step="0.05" value="1.0" placeholder="속도" />
-    </div>
-
-    <div>
-      <div class="label">변환할 텍스트</div>
-      <textarea id="textInput" placeholder="음성으로 바꿀 문장을 입력하세요. 예: 안녕하세요. 오늘은 Firebase와 OpenAI API를 활용한 웹페이지 제작을 배워보겠습니다."></textarea>
-    </div>
-
-    <div class="button-row">
-      <button class="clear-btn" id="clearBtn">초기화</button>
-      <button class="make-btn" id="makeBtn">음성 만들기</button>
-    </div>
-
-    <div id="status" class="status"></div>
-
-    <div id="resultBox" class="result-box hidden">
-      <div class="label">생성된 음성</div>
-      <audio id="audioPlayer" controls></audio>
-      <div class="button-row">
-        <a id="downloadLink" class="download-link" href="#" download="tts-audio.mp3">mp3 다운로드</a>
+    <div id="authSection" class="auth-box">
+      <h3 id="authTitle" style="text-align: center; margin-top: 0;">로그인</h3>
+      <input type="email" id="authEmail" class="auth-input" placeholder="이메일 주소" />
+      <input type="password" id="authPassword" class="auth-input" placeholder="비밀번호" />
+      <button id="authBtn" class="auth-btn">로그인</button>
+      
+      <div class="auth-toggle-text">
+        <span id="toggleAuthMode">계정이 없으신가요? 회원가입하기</span>
       </div>
     </div>
 
-    <div class="help">
-      긴 문장은 생성 시간이 오래 걸릴 수 있습니다. 처음에는 짧은 문장으로 테스트해보세요.<br />
-      속도는 0.25부터 4.0까지 조절할 수 있습니다.
+    <div id="ttsSection" class="hidden">
+      
+      <div class="user-info-row">
+        <div>로그인 계정: <strong id="userEmailDisplay">-</strong></div>
+        <button id="logoutBtn" class="logout-btn">로그아웃</button>
+      </div>
+
+      <div class="info">
+        현재 구조: GitHub Pages 화면 → Google Apps Script 서버 → OpenAI TTS API → mp3 음성 반환<br />
+        API Key는 index.html에 들어가지 않고 Apps Script의 스크립트 속성에 저장됩니다.
+      </div>
+
+      <div class="option-box">
+        <select id="modelSelect">
+          <option value="tts-1">tts-1 빠른 생성</option>
+          <option value="tts-1-hd">tts-1-hd 고품질</option>
+        </select>
+
+        <select id="voiceSelect">
+          <option value="alloy">alloy</option>
+          <option value="echo">echo</option>
+          <option value="fable">fable</option>
+          <option value="onyx">onyx</option>
+          <option value="nova">nova</option>
+          <option value="shimmer">shimmer</option>
+        </select>
+
+        <input id="speedInput" type="number" min="0.25" max="4.0" step="0.05" value="1.0" placeholder="속도" />
+      </div>
+
+      <div>
+        <div class="label">변환할 텍스트</div>
+        <textarea id="textInput" placeholder="음성으로 바꿀 문장을 입력하세요. 예: 안녕하세요. 오늘은 Firebase와 OpenAI API를 활용한 웹페이지 제작을 배워보겠습니다."></textarea>
+      </div>
+
+      <div class="button-row">
+        <button class="clear-btn" id="clearBtn">초기화</button>
+        <button class="make-btn" id="makeBtn">음성 만들기</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div id="resultBox" class="result-box hidden">
+        <div class="label">생성된 음성</div>
+        <audio id="audioPlayer" controls></audio>
+        <div class="button-row">
+          <a id="downloadLink" class="download-link" href="#" download="tts-audio.mp3">mp3 다운로드</a>
+        </div>
+      </div>
+
+      <div class="help">
+        긴 문장은 생성 시간이 오래 걸릴 수 있습니다. 처음에는 짧은 문장으로 테스트해보세요.<br />
+        속도는 0.25부터 4.0까지 조절할 수 있습니다.
+      </div>
     </div>
+
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // ⚠️ [필수 고치기] 가지고 계신 firebaseConfig 객체 내용을 아래에 붙여넣어 주세요!
+    const firebaseConfig = {
+      apiKey: "AIzaSyDcKuJ89OCvdI299TDiTQY8UFTT_NSFKtA",
+      authDomain: "test-ac614.firebaseapp.com",
+      databaseURL: "https://test-ac614-default-rtdb.firebaseio.com",
+      projectId: "test-ac614",
+      storageBucket: "test-ac614.firebasestorage.app",
+      messagingSenderId: "99551043693",
+      appId: "1:99551043693:web:07b985bcc9882b543c9f64",
+      measurementId: "G-QHRWGESQ3N"
+    };
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Apps Script URL
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzvCeCidpIBm3Ez_AbmzTRrvzCkPa_7x-irAazDPzljPmuqjjHZOqXxfyS1vNh7tX1/exec';
+
+    // DOM 요소들
+    const authSection = document.getElementById('authSection');
+    const ttsSection = document.getElementById('ttsSection');
+    const authTitle = document.getElementById('authTitle');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authBtn = document.getElementById('authBtn');
+    const toggleAuthMode = document.getElementById('toggleAuthMode');
+    const userEmailDisplay = document.getElementById('userEmailDisplay');
+    const logoutBtn = document.getElementById('logoutBtn');
 
     const textInput = document.getElementById('textInput');
     const modelSelect = document.getElementById('modelSelect');
@@ -238,6 +333,92 @@
     const resultBox = document.getElementById('resultBox');
     const audioPlayer = document.getElementById('audioPlayer');
     const downloadLink = document.getElementById('downloadLink');
+
+    // 변수 선언 (현재 폼 상태: login 또는 signup)
+    let isLoginMode = true;
+
+    // --- [Firebase 인증 핸들러] ---
+
+    // 1. 로그인 상태 지속 감시 (페이지 새로고침 시에도 감지)
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // 로그인 성공 시
+        userEmailDisplay.textContent = user.email;
+        authSection.classList.add('hidden');
+        ttsSection.classList.remove('hidden');
+        clearPage();
+      } else {
+        // 로그아웃 상태 시
+        authSection.classList.remove('hidden');
+        ttsSection.classList.add('hidden');
+      }
+    });
+
+    // 2. 로그인 및 회원가입 모드 전환 버튼
+    toggleAuthMode.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      if (isLoginMode) {
+        authTitle.textContent = "로그인";
+        authBtn.textContent = "로그인";
+        toggleAuthMode.textContent = "계정이 없으신가요? 회원가입하기";
+      } else {
+        authTitle.textContent = "회원가입";
+        authBtn.textContent = "가입하기";
+        toggleAuthMode.textContent = "이미 계정이 있으신가요? 로그인하기";
+      }
+    });
+
+    // 3. 인증 버튼 실행 (로그인 또는 회원가입)
+    authBtn.addEventListener('click', async () => {
+      const email = authEmail.value.trim();
+      const password = authPassword.value.trim();
+
+      if (!email || !password) {
+        alert('이메일과 비밀번호를 모두 입력해주세요.');
+        return;
+      }
+
+      try {
+        if (isLoginMode) {
+          // 로그인 진행
+          await signInWithEmailAndPassword(auth, email, password);
+          alert('로그인 성공!');
+        } else {
+          // 회원가입 진행
+          await createUserWithEmailAndPassword(auth, email, password);
+          alert('회원가입 및 로그인 완료!');
+        }
+        // 인풋 초기화
+        authEmail.value = '';
+        authPassword.value = '';
+      } catch (error) {
+        console.error(error);
+        let errorMsg = "인증 오류가 발생했습니다.";
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+          errorMsg = "이메일 또는 비밀번호가 틀렸습니다.";
+        } else if (error.code === 'auth/email-already-in-use') {
+          errorMsg = "이미 사용 중인 이메일입니다.";
+        } else if (error.code === 'auth/weak-password') {
+          errorMsg = "비밀번호는 6자리 이상이어야 합니다.";
+        } else if (error.code === 'auth/invalid-email') {
+          errorMsg = "올바른 이메일 형식이 아닙니다.";
+        }
+        alert(errorMsg);
+      }
+    });
+
+    // 4. 로그아웃 버튼
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        alert('로그아웃 되었습니다.');
+      } catch (error) {
+        alert('로그아웃 실패: ' + error.message);
+      }
+    });
+
+
+    // --- [기존 TTS 관련 함수들] ---
 
     makeBtn.addEventListener('click', makeSpeech);
     clearBtn.addEventListener('click', clearPage);
@@ -351,4 +532,3 @@
   </script>
 </body>
 </html>
-
